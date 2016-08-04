@@ -123,17 +123,21 @@ function loadSource()
 
 function loadAndStart() {
 	var path = process.cwd();
-	if (fs.existsSync("package.json")) { // webos-service based Node module
+	try {
+	    fs.accessSync("package.json");  // webos-service based Node module
 		//console.log("loading node module from "+path);
 		var mod = require(path);
 		if (mod.run) {
 			mod.run(name);
 		}
-	} else if (fs.existsSync("sources.json")) { // mojoservice-based service
-		loadSource();
-		appController = new IMPORTS.mojoservice.AppController(paramsToScript);
-	} else {
-		console.error("Couldn't determine launch file for service path "+path);
+	} catch(e) {
+		try {
+	        fs.existsSync("sources.json");   // mojoservice-based service
+		    loadSource();
+		    appController = new IMPORTS.mojoservice.AppController(paramsToScript);
+		} catch(e) {
+			console.error("Couldn't determine launch file for service path "+path);
+		}
 	}
 }
 
@@ -166,10 +170,11 @@ try {
 	var dir = paramsToScript[0];
 	var config;
 	var name;
-	if (fs.existsSync("services.json")) {
+	try {
+	    fs.accessSync("services.json");
 		config = JSON.parse(loadFile("services.json", "utf8"));
 		name = config["services"][0].name;
-	} else {
+	} catch(e) {
 		config = JSON.parse(loadFile("package.json", "utf8"));
 		name = config.name;
 	}
