@@ -130,12 +130,12 @@ function loadAndStart() {
 		if (mod.run) {
 			mod.run(name);
 		}
-	} catch(e) {
+	} catch(errPackage) {
 		try {
-	        fs.existsSync("sources.json");   // mojoservice-based service
+	        fs.accessSync("sources.json");   // mojoservice-based service
 		    loadSource();
 		    appController = new IMPORTS.mojoservice.AppController(paramsToScript);
-		} catch(e) {
+		} catch(errSources) {
 			console.error("Couldn't determine launch file for service path "+path);
 		}
 	}
