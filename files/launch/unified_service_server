@@ -1,4 +1,4 @@
-# Copyright (c) 2009-2018 LG Electronics, Inc.
+# Copyright (c) 2015-2018 LG Electronics, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,13 +14,10 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-description "node fork server"
+description "node.js server to run unified services"
 
 start on stopped bootmisc
 stop on started start_update
-
-# OOM should never kill node_fork_server
-oom score never
 
 normal exit 0
 respawn
@@ -28,15 +25,15 @@ respawn
 # Comment this line out to suppress logs on the console
 #console output
 
-env NODE_VAR="/var/run/node"
-env NODE_PATH=/usr/palm/frameworks:/usr/lib/nodejs:/usr/lib/node_modules:/usr/palm/nodejs:/usr/palm/services/jsservicelauncher
-env NODE_FORK_SERVER_HOST=/var/run/node_fork_server.socket
-export NODE_PATH
-export NODE_FORK_SERVER_HOST
-
 script
-	mkdir -p ${NODE_VAR}
-	touch ${NODE_VAR}/fork
-	# Set max heap size to 22 MiB (globally for every process forked)
-	/usr/bin/node --expose_gc --harmony --max_old_space_size=22 --noconcurrent_recompilation --noconcurrent_sweeping /usr/palm/nodejs/fork_server.js
+    # do not start if factory mode
+    # server will be started by unified_service_server_factory
+    if grep -q -w "factory" /proc/cmdline
+    then
+            exit 0
+    fi
+
+	touch /var/run/unified_service_server_enabled || true
+    export NODE_PATH=/usr/palm/frameworks:/usr/lib/nodejs:/usr/lib/node_modules:/usr/palm/services/jsservicelauncher
+    /usr/bin/node --expose_gc --harmony --always_compact --max_old_space_size=220 /usr/palm/nodejs/unified_service_server.js --gc_pending_time=30
 end script

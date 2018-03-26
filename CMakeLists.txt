@@ -1,6 +1,4 @@
-# @@@LICENSE
-#
-#      Copyright (c) 2009-2013 LG Electronics, Inc.
+# Copyright (c) 2009-2018 LG Electronics, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# LICENSE@@@
+# SPDX-License-Identifier: Apache-2.0
 
 cmake_minimum_required(VERSION 2.8.7)
 
@@ -22,7 +20,7 @@ project(mojoservicelauncher CXX)
 
 include(webOS/webOS)
 webos_modules_init(1 0 0 QUALIFIER RC4)
-webos_component(3 0 1)
+webos_component(3 0 2)
 
 include(FindPkgConfig)
 
@@ -35,19 +33,24 @@ include_directories(Boost_INCLUDE_DIRS)
 
 webos_add_compiler_flags(ALL -Wall)
 
-#don't enable the fork_server with Node v0.10
-#install(FILES files/launch/node_fork_server DESTINATION ${WEBOS_INSTALL_SYSCONFDIR}/event.d)
-#install(FILES files/launch/node_fork_server.conf DESTINATION ${WEBOS_INSTALL_SYSCONFDIR}/init)
-install(FILES fork_server.js DESTINATION ${WEBOS_INSTALL_WEBOS_PREFIX}/nodejs)
-install(PROGRAMS run-js-service DESTINATION ${WEBOS_INSTALL_BINDIR})
-install(FILES bootstrap-node.js palm_bus_config.json sources.json DESTINATION ${WEBOS_INSTALL_WEBOS_SERVICESDIR}/jsservicelauncher)
+if (DEFINED ENV{RUN_AS_USER})
+  set(RUN_AS_USER $ENV{RUN_AS_USER})
+else ()
+  set(RUN_AS_USER root)
+endif()
+configure_file(run-js-service.in ${CMAKE_CURRENT_BINARY_DIR}/run-js-service @ONLY)
+
+#don't enable the fork_server with Node v0.10 or when distro mini
+if (NOT ${WEBOS_TARGET_DISTRO_VARIANT} MATCHES "mini")
+  install(FILES files/launch/node_fork_server DESTINATION ${WEBOS_INSTALL_SYSCONFDIR}/event.d)
+  install(FILES files/launch/node_fork_server.conf DESTINATION ${WEBOS_INSTALL_SYSCONFDIR}/init)
+endif()
+#Note: The following line is commented out because it is relavent for unified server but platform build uses node fork server.
+#install(FILES files/launch/unified_service_server_factory.conf DESTINATION ${WEBOS_INSTALL_SYSCONFDIR}/init)
+install(FILES fork_server.js gcctrl.js DESTINATION ${WEBOS_INSTALL_WEBOS_PREFIX}/nodejs)
+install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/run-js-service DESTINATION ${WEBOS_INSTALL_BINDIR})
+install(FILES bootstrap.js bootstrap-node.js domain-utils.js palm_bus_config.json sources.json DESTINATION ${WEBOS_INSTALL_WEBOS_SERVICESDIR}/jsservicelauncher)
 
 # Create empty directory (why?)
 install(DIRECTORY DESTINATION ${WEBOS_INSTALL_WEBOS_FRAMEWORKSDIR}/private/javascripts)
-
-add_executable(node_spawner node_spawner.cc)
-
-target_link_libraries(node_spawner ${PBNJSON_CPP_LDFLAGS} ${Boost_LIBRARIES} rt)
-webos_build_program(NAME node_spawner)
-
 

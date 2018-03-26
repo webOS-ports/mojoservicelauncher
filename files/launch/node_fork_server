@@ -1,6 +1,4 @@
-# @@@LICENSE
-#
-#      Copyright (c) 2009-2013 LG Electronics, Inc.
+# Copyright (c) 2009-2018 LG Electronics, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,13 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# LICENSE@@@
+# SPDX-License-Identifier: Apache-2.0
 
 # node fork server
 
 description "node fork server"
 
-start on ls-hubd_public-ready
+start on stopped bootmisc
 stop on started start_update
 
 normal exit 0
@@ -30,11 +28,13 @@ respawn
 #console output
 
 script
-    NODE_VAR="/var/palm/node"
+    NODE_VAR="/var/run/node"
 
     mkdir -p ${NODE_VAR}
     touch ${NODE_VAR}/fork
-    export NODE_PATH=/usr/palm/frameworks:/usr/palm/nodejs
+    export NODE_PATH=/usr/palm/frameworks:/usr/lib/nodejs:/usr/lib/node_modules:/usr/palm/nodejs:/usr/palm/services/jsservicelauncher
+    export NODE_FORK_SERVER_HOST=/var/run/node_fork_server.socket
+
     # Set max heap size to 22 MiB (globally for every process forked)
-    /usr/palm/nodejs/node --max_old_space_size=23068672 /usr/palm/nodejs/fork_server.js
+    /usr/bin/node --expose_gc --harmony --max_old_space_size=22 --noconcurrent_recompilation --noconcurrent_osr --noconcurrent_sweeping /usr/palm/nodejs/fork_server.js
 end script
