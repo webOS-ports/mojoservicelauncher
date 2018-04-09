@@ -150,7 +150,7 @@ fi
 # does each app get its own jail or use a common one?
 if [ "$jail" = on ] ; then
 	case "${FULL_SERVICE_NAME}" in
-	com.palm.*|com.webos.*|com.lge.*)
+	com.palm.*|com.webos.*|com.lge.*|org.webosports.*|org.webosinternals.*)
 		appid="com.palm.triton"
 		case ${palm_jail} in
 		off) jail=off;;
