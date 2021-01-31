@@ -290,7 +290,7 @@ fi
 logger -s "[run-js-service] FULL_SERVICE_NAME " $FULL_SERVICE_NAME
 
 case "${FULL_SERVICE_NAME}" in
-	com.palm.*|com.webos.*|com.lge.*)
+	com.palm.*|com.webos.*|com.lge.*|org.webosports.*|org.webosinternals.*)
 		echo "ROM_SERVICE " $ROM_SERVICE
 		echo "jail " $jail
 		if [ $FULL_SERVICE_NAME != com.lge.service.wta ] ; then
